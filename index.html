@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ticket #23540 — Devolución de Primas Continental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182338;
+    --ink-soft:#4b5568;
+    --paper:#faf8f4;
+    --panel:#ffffff;
+    --line:#e3ddd0;
+    --line-strong:#c9c1ae;
+    --resolved:#2c6e49;
+    --resolved-bg:#eaf3ec;
+    --resolved-line:#bcd9c6;
+    --pending:#9a3324;
+    --pending-bg:#fbece7;
+    --pending-line:#e6b8ac;
+    --gold:#a5772f;
+    --radius:3px;
+    --serif:"Fraunces", Georgia, serif;
+    --sans:"IBM Plex Sans", -apple-system, Segoe UI, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e9e6de; --ink-soft:#aca88f;
+      --paper:#181510; --panel:#211d17;
+      --line:#3a3427; --line-strong:#4d4634;
+      --resolved:#7bc79a; --resolved-bg:#16261d; --resolved-line:#2c4a37;
+      --pending:#e28c78; --pending-bg:#2c1a15; --pending-line:#4c2c22;
+      --gold:#d4a856;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#e9e6de; --ink-soft:#aca88f;
+    --paper:#181510; --panel:#211d17;
+    --line:#3a3427; --line-strong:#4d4634;
+    --resolved:#7bc79a; --resolved-bg:#16261d; --resolved-line:#2c4a37;
+    --pending:#e28c78; --pending-bg:#2c1a15; --pending-line:#4c2c22;
+    --gold:#d4a856;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; scroll-padding-top: calc(24px + env(safe-area-inset-top,0px));}
+  body{
+    margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+    font-size:16px; line-height:1.55;
+    padding-top: env(safe-area-inset-top,0px); padding-bottom: env(safe-area-inset-bottom,0px);
+  }
+  a{color:inherit;}
+  .tabular{font-variant-numeric:tabular-nums;}
+
+  /* ---------- Layout shell ---------- */
+  .shell{display:flex; max-width:1280px; margin:0 auto;}
+  .side{
+    width:264px; flex:none; position:sticky; top:0; align-self:flex-start;
+    height:100vh; overflow-y:auto; padding:28px 20px 28px 28px;
+    border-right:1px solid var(--line);
+  }
+  .side::-webkit-scrollbar{width:6px;}
+  .side::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:4px;}
+  .brand{font-family:var(--serif); font-size:15px; font-weight:600; letter-spacing:.01em; margin-bottom:2px;}
+  .brand small{display:block; font-family:var(--sans); font-weight:400; font-size:12.5px; color:var(--ink-soft); margin-top:3px;}
+  nav.toc{margin-top:26px; display:flex; flex-direction:column; gap:1px;}
+  nav.toc a{
+    display:flex; align-items:baseline; gap:9px; padding:8px 10px; border-radius:var(--radius);
+    text-decoration:none; font-size:13.5px; color:var(--ink-soft); border-left:2px solid transparent;
+  }
+  nav.toc a .n{font-family:var(--mono); font-size:11.5px; color:var(--line-strong); flex:none;}
+  nav.toc a:hover{color:var(--ink); background:var(--panel);}
+  nav.toc a.active{color:var(--ink); border-left-color:var(--gold); background:var(--panel); font-weight:500;}
+  .side-foot{margin-top:30px; padding-top:18px; border-top:1px solid var(--line); font-size:12px; color:var(--ink-soft); line-height:1.6;}
+
+  .menu-toggle{display:none;}
+
+  main{flex:1; min-width:0; padding:0 0 90px;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:56px 56px 40px; border-bottom:1px solid var(--line);}
+  .hero .kicker{font-family:var(--mono); font-size:12.5px; color:var(--gold); letter-spacing:.03em; margin-bottom:14px;}
+  .hero h1{
+    font-family:var(--serif); font-weight:600; font-size:clamp(28px,4vw,40px);
+    line-height:1.15; margin:0 0 14px; max-width:16ch;
+  }
+  .hero p.lede{max-width:56ch; color:var(--ink-soft); font-size:16px; margin:0 0 34px;}
+
+  .stat-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .stat{
+    flex:1; min-width:240px; padding:22px 24px; border-radius:var(--radius);
+    border:1px solid var(--line);
+  }
+  .stat.is-resolved{background:var(--resolved-bg); border-color:var(--resolved-line);}
+  .stat.is-pending{background:var(--pending-bg); border-color:var(--pending-line);}
+  .stat .label{font-size:12.5px; font-weight:600; letter-spacing:.01em; margin-bottom:8px;}
+  .stat.is-resolved .label{color:var(--resolved);}
+  .stat.is-pending .label{color:var(--pending);}
+  .stat .amount{font-family:var(--serif); font-size:clamp(24px,3vw,32px); font-weight:600;}
+  .stat .sub{font-size:13px; color:var(--ink-soft); margin-top:6px;}
+
+  /* ---------- Sections ---------- */
+  section.block{padding:52px 56px; border-bottom:1px solid var(--line); scroll-margin-top:20px;}
+  section.block:last-of-type{border-bottom:none;}
+  .eyebrow{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .eyebrow .idx{
+    font-family:var(--mono); font-size:12.5px; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--line-strong); flex:none;
+  }
+  h2{font-family:var(--serif); font-weight:600; font-size:26px; margin:0 0 18px;}
+  h3{font-family:var(--serif); font-weight:600; font-size:18px; margin:34px 0 12px;}
+  p{max-width:72ch; margin:0 0 16px;}
+  p.tight{margin-bottom:10px;}
+  .muted{color:var(--ink-soft);}
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:20px;
+    font-size:12.5px; font-weight:600; border:1px solid;
+  }
+  .pill.resolved{color:var(--resolved); background:var(--resolved-bg); border-color:var(--resolved-line);}
+  .pill.pending{color:var(--pending); background:var(--pending-bg); border-color:var(--pending-line);}
+
+  /* ---------- Tables ---------- */
+  .twrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); margin:18px 0;}
+  table{border-collapse:collapse; width:100%; min-width:560px; font-size:14px;}
+  th{
+    text-align:left; font-weight:600; font-size:12px; letter-spacing:.02em; color:var(--ink-soft);
+    padding:11px 14px; background:var(--panel); border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--panel);}
+  td.num, th.num{text-align:right; font-family:var(--mono);}
+  td.mono{font-family:var(--mono); font-size:13px; color:var(--ink-soft);}
+  tr.total td{font-weight:600; border-top:1px solid var(--line-strong); background:var(--panel);}
+  tr.total td.num{font-family:var(--mono);}
+
+  .doclink{
+    display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:600;
+    color:var(--gold); text-decoration:none; white-space:nowrap;
+  }
+  .doclink:hover{text-decoration:underline;}
+  .doclink svg{width:12px; height:12px; flex:none;}
+  .nodoc{font-size:12.5px; color:var(--pending); font-weight:500; white-space:nowrap;}
+
+  /* ---------- Callouts ---------- */
+  .callout{
+    border-left:3px solid var(--gold); padding:16px 20px; margin:20px 0; background:var(--panel);
+    border-radius:0 var(--radius) var(--radius) 0; max-width:72ch;
+  }
+  .callout p{margin:0; font-size:14.5px;}
+  .callout.resolved{border-left-color:var(--resolved);}
+  .callout.pending{border-left-color:var(--pending);}
+
+  .verdict{
+    border:1px solid var(--pending-line); background:var(--pending-bg); border-radius:var(--radius);
+    padding:26px 28px; max-width:72ch; margin-top:20px;
+  }
+  .verdict .vt{font-family:var(--serif); font-weight:600; font-size:15px; color:var(--pending); margin-bottom:10px;}
+  .verdict p{margin:0; font-size:14.5px; line-height:1.65; font-style:italic;}
+
+  ol.evidence{max-width:72ch; padding-left:0; list-style:none; counter-reset:ev; margin:20px 0;}
+  ol.evidence li{
+    counter-increment:ev; position:relative; padding:14px 0 14px 44px; border-bottom:1px solid var(--line);
+    font-size:14.5px; line-height:1.6;
+  }
+  ol.evidence li:last-child{border-bottom:none;}
+  ol.evidence li::before{
+    content:counter(ev); position:absolute; left:0; top:14px; width:26px; height:26px;
+    font-family:var(--mono); font-size:12px; border:1px solid var(--line-strong); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  ol.evidence li b{font-weight:600;}
+
+  .foot{padding:40px 56px; font-size:12.5px; color:var(--ink-soft); max-width:72ch;}
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 900px){
+    .side{
+      position:fixed; z-index:40; left:0; top:0; height:100vh; width:78%; max-width:300px;
+      transform:translateX(-100%); transition:transform .25s ease; background:var(--paper);
+      box-shadow:0 0 40px rgba(0,0,0,.25);
+      padding-top: calc(28px + env(safe-area-inset-top,0px));
+    }
+    .side.open{transform:translateX(0);}
+    .menu-toggle{
+      display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:30;
+      background:var(--paper); border-bottom:1px solid var(--line);
+      padding: calc(14px + env(safe-area-inset-top,0px)) 20px 14px;
+    }
+    .menu-toggle button{
+      background:var(--panel); border:1px solid var(--line-strong); border-radius:6px;
+      width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:var(--ink);
+    }
+    .menu-toggle .brand{font-size:14px;}
+    .menu-toggle .brand small{display:none;}
+    .scrim{display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:35;}
+    .scrim.show{display:block;}
+    .hero, section.block, .foot{padding-left:24px; padding-right:24px;}
+    .stat-row{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div class="menu-toggle">
+  <button id="menuBtn" aria-label="Abrir índice">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="brand">Ticket #23540<small>Devolución de Primas</small></div>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="brand">Ticket WTW #23540<small>Devolución de Primas · Continental / Copec</small></div>
+    <nav class="toc" id="toc">
+      <a href="#resumen"><span class="n">—</span> Resumen</a>
+      <a href="#facturas"><span class="n">0</span> Facturas origen</a>
+      <a href="#grupo-a"><span class="n">1</span> Grupo A — Resuelto</a>
+      <a href="#grupo-b"><span class="n">2</span> Grupo B — Sin resolver</a>
+      <a href="#evidencia"><span class="n">3</span> Por qué se debe</a>
+      <a href="#conclusion"><span class="n">4</span> Conclusión</a>
+    </nav>
+    <div class="side-foot">
+      Preparado por COPEC S.A. — Gerencia de Administración y Finanzas.<br>
+      Fuentes: SAP (Comprobantes / Facturas), correos del hilo Ticket #23540, documentos tributarios electrónicos (DTE) y comprobantes bancarios Bci.
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- HERO -->
+    <div class="hero" id="resumen">
+      <div class="kicker">TICKET WTW #23540 · DEVOLUCIÓN DE PRIMAS</div>
+      <h1>Dos grupos de Notas de Crédito, dos destinos muy distintos</h1>
+      <p class="lede">Continental emitió 14 Notas de Crédito a Copec por un total de $1.017.354.709. Un grupo está devuelto y documentado con comprobante bancario. El otro sigue sin resolverse — y esta página explica, con la evidencia de origen, por qué.</p>
+
+      <div class="stat-row">
+        <div class="stat is-resolved">
+          <div class="label">GRUPO A · RESUELTO</div>
+          <div class="amount tabular">$1.006.661.864</div>
+          <div class="sub">8 NC · comprobante bancario Bci confirmado, 11/06/2026</div>
+        </div>
+        <div class="stat is-pending">
+          <div class="label">GRUPO B · SIN RESOLVER</div>
+          <div class="amount tabular">$10.692.845</div>
+          <div class="sub">6 NC · sin comprobante bancario encontrado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 0 — FACTURAS ORIGEN -->
+    <section class="block" id="facturas">
+      <div class="eyebrow"><span class="idx">0</span></div>
+      <h2>Las 3 facturas origen — pagadas al 100%</h2>
+      <p>Son las facturas que Continental emitió a Copec por primas de seguro. Las tres fueron canceladas en su totalidad mediante transferencia bancaria real, antes incluso de que existieran las Notas de Crédito de este caso.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Folio FE</th><th>Fecha emisión</th><th>Póliza / Detalle</th><th class="num">Total (CLP)</th><th>Documento</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="mono">269459</td><td class="mono">18/02/2025</td><td>Plan de pago 233761 cuota 1 de 1, Pól. 224104028</td><td class="num tabular">$537.193.447</td>
+              <td><a class="doclink" href="https://drive.google.com/file/d/1XrA_T7Dw8_hUqWXVN8drmdvJzx6swE64/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">269460</td><td class="mono">18/02/2025</td><td>Plan de pago 233768 cuota 1 de 1, Pól. 224104037</td><td class="num tabular">$2.290.614.029</td>
+              <td><a class="doclink" href="https://drive.google.com/file/d/1M7OhCeS7IgHgbU5nA_yoVrBuXSn0bgsl/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">269461</td><td class="mono">18/02/2025</td><td>Póliza 224104119, endoso 0</td><td class="num tabular">$219.280.024</td>
+              <td><a class="doclink" href="https://drive.google.com/file/d/1wxx4cYoe9B-yqUdYnU-j8thL0CEOihUQ/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr class="total"><td colspan="3">Total</td><td class="num tabular">$3.047.087.500</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Cadena de compensación en SAP — evidencia del pago 100%</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Factura / Doc.</th><th>Clase</th><th class="num">Importe</th><th>Fecha doc.</th><th>Fecha contab.</th><th>N° documento</th><th>Doc. compensación</th><th>Usuario</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="mono">269459</td><td>KD</td><td class="num tabular">-$537.193.447</td><td class="mono">18/02/2025</td><td class="mono">20/03/2025</td><td class="mono">420017106</td><td class="mono">330015623</td><td class="mono">DDOMINGUEZ</td></tr>
+            <tr><td class="mono">269460</td><td>KD</td><td class="num tabular">-$2.290.614.029</td><td class="mono">18/02/2025</td><td class="mono">20/03/2025</td><td class="mono">420017105</td><td class="mono">330015623</td><td class="mono">DDOMINGUEZ</td></tr>
+            <tr><td class="mono">269461</td><td>KD</td><td class="num tabular">-$219.280.024</td><td class="mono">18/02/2025</td><td class="mono">20/03/2025</td><td class="mono">420017104</td><td class="mono">260661025</td><td class="mono">DDOMINGUEZ</td></tr>
+            <tr><td class="mono">269461</td><td>PV</td><td class="num tabular">-$215.916.520</td><td class="mono">18/02/2025</td><td class="mono">20/03/2025</td><td class="mono">260661025</td><td class="mono">330015623</td><td class="mono">DDOMINGUEZ</td></tr>
+            <tr><td class="mono">269461</td><td>PV</td><td class="num tabular">+$215.916.520</td><td class="mono">18/02/2025</td><td class="mono">18/02/2025</td><td class="mono">260661025</td><td class="mono">260661025 (self)</td><td class="mono">DDOMINGUEZ</td></tr>
+            <tr><td class="mono">330015623 (pago)</td><td>ZP</td><td class="num tabular">+$3.043.723.996</td><td class="mono">21/03/2025</td><td class="mono">21/03/2025</td><td class="mono">330015623</td><td class="mono">330015623 (self)</td><td class="mono">CCPINA</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout resolved">
+        <p><b>Verificación matemática:</b> $537.193.447 + $2.290.614.029 + $215.916.520 = $3.043.723.996 — exacto al peso, coincidiendo con el comprobante bancario Bci del 21/03/2025.</p>
+      </div>
+
+      <p>Las tres facturas están 100% compensadas: 269459 y 269460 completas vía pago bancario real (ZP 330015623); 269461, un 98,5% vía el mismo pago bancario y el 1,5% restante ($3.363.504) vía un cruce documental de saldos de 2024, sin relación con las NC de este caso. <b>Ninguna de las 6 NC del Grupo B participó en este cierre.</b></p>
+
+      <h3>El 1,5% restante de la 269461 ($3.363.504) — cruce documental de saldos 2024</h3>
+      <p>Este monto no es plata nueva: es el resultado neto de compensar 8 Notas de Crédito antiguas (nunca antes aplicadas) contra 5 facturas antiguas pendientes, más una devolución — 14 documentos en total, todos de 2024, que en conjunto suman exactamente los $3.363.504 que faltaban para cerrar la factura 269461. Todos comparten el mismo Doc.compensación: <span class="mono">260661024</span>.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th>Referencia</th><th>Clase</th><th class="num">Importe</th><th>Fecha doc.</th><th>Fecha contab.</th><th>N° documento</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="mono">23510</td><td>KF (NC)</td><td class="num tabular">+$441.046</td><td class="mono">15/04/2024</td><td class="mono">15/04/2024</td><td class="mono">420038360</td></tr>
+            <tr><td class="mono">23509</td><td>KF (NC)</td><td class="num tabular">+$459.267</td><td class="mono">15/04/2024</td><td class="mono">15/04/2024</td><td class="mono">420038361</td></tr>
+            <tr><td class="mono">23501</td><td>KF (NC)</td><td class="num tabular">+$438.071</td><td class="mono">15/04/2024</td><td class="mono">15/04/2024</td><td class="mono">420038363</td></tr>
+            <tr><td class="mono">23932</td><td>KF (NC)</td><td class="num tabular">+$1.105.711</td><td class="mono">05/06/2024</td><td class="mono">05/06/2024</td><td class="mono">420056420</td></tr>
+            <tr><td class="mono">DEVOLUCION</td><td>PV</td><td class="num tabular">+$829.029</td><td class="mono">17/07/2024</td><td class="mono">19/07/2024</td><td class="mono">261758794</td></tr>
+            <tr><td class="mono">24774</td><td>KF (NC)</td><td class="num tabular">+$255.032</td><td class="mono">11/09/2024</td><td class="mono">11/09/2024</td><td class="mono">420087672</td></tr>
+            <tr><td class="mono">24785</td><td>KF (NC)</td><td class="num tabular">+$228.923</td><td class="mono">11/09/2024</td><td class="mono">11/09/2024</td><td class="mono">420087674</td></tr>
+            <tr><td class="mono">25093</td><td>KF (NC)</td><td class="num tabular">+$726.253</td><td class="mono">25/10/2024</td><td class="mono">25/10/2024</td><td class="mono">420023793</td></tr>
+            <tr><td class="mono">259979</td><td>KD (Factura)</td><td class="num tabular">-$67.956</td><td class="mono">25/10/2024</td><td class="mono">24/11/2024</td><td class="mono">420023805</td></tr>
+            <tr><td class="mono">260636</td><td>KD (Factura)</td><td class="num tabular">-$1.099.830</td><td class="mono">05/11/2024</td><td class="mono">05/12/2024</td><td class="mono">420023806</td></tr>
+            <tr><td class="mono">264997</td><td>KD (Factura)</td><td class="num tabular">-$35.725</td><td class="mono">30/12/2024</td><td class="mono">29/01/2025</td><td class="mono">420023809</td></tr>
+            <tr><td class="mono">264995</td><td>KD (Factura)</td><td class="num tabular">-$86.816</td><td class="mono">30/12/2024</td><td class="mono">29/01/2025</td><td class="mono">420023807</td></tr>
+            <tr><td class="mono">264998</td><td>KD (Factura)</td><td class="num tabular">-$137.139</td><td class="mono">30/12/2024</td><td class="mono">29/01/2025</td><td class="mono">420023808</td></tr>
+            <tr><td class="mono">25489</td><td>KF (NC)</td><td class="num tabular">+$307.638</td><td class="mono">27/12/2024</td><td class="mono">27/12/2024</td><td class="mono">420001415</td></tr>
+            <tr class="total"><td colspan="2">Neto</td><td class="num tabular">+$3.363.504</td><td colspan="3"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout resolved">
+        <p><b>Composición del cruce:</b> 8 Notas de Crédito (+$3.961.941) + 1 devolución (+$829.029) − 5 facturas antiguas (−$1.427.466) = <b>+$3.363.504</b>, el monto exacto que faltaba para cerrar la factura 269461. Un cruce contable válido, sin relación con las 6 NC del Grupo B en disputa.</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 1 — GRUPO A -->
+    <section class="block" id="grupo-a">
+      <div class="eyebrow"><span class="idx">1</span><span class="pill resolved">Resuelto</span></div>
+      <h2>Grupo A — devuelto y confirmado</h2>
+      <p>Ocho Notas de Crédito, destinadas a rebajar las facturas 269459 y 269460, más dos NC posteriores emitidas contra una factura nueva. Todo el grupo fue devuelto por Continental vía transferencia bancaria, con comprobante.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr><th>NC / Doc.</th><th class="num">Monto</th><th>Factura destino</th><th>Documento</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">26522</td><td class="num tabular">$907.803</td><td>269459</td><td><a class="doclink" href="https://drive.google.com/file/d/1dX6a-escPYrO60e3PwvM1UruCxJyFw3j/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26524</td><td class="num tabular">$804.323</td><td>269459</td><td><a class="doclink" href="https://drive.google.com/file/d/1Ds9o8qkvfGNJj0dHNNucPiaUIWWXnJ8U/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26526</td><td class="num tabular">$692.219</td><td>269459</td><td><a class="doclink" href="https://drive.google.com/file/d/1bMk7hHoFVgFq2gCwPzDsgClSW2DI8nRY/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26570</td><td class="num tabular">$3.311.126</td><td>269460</td><td><a class="doclink" href="https://drive.google.com/file/d/1HJUOMkb6hqN7_wwRCo67kojzQe8NQKSI/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26571</td><td class="num tabular">$3.084.058</td><td>269460</td><td><a class="doclink" href="https://drive.google.com/file/d/1syzCLQopxzdwfBFQttU9_71e6M37-had/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26593</td><td class="num tabular">$2.116.171</td><td>269460</td><td><a class="doclink" href="https://drive.google.com/file/d/1axR5W5fsdL2yj5CJGosGMr6g3_FICBe4/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">28910</td><td class="num tabular">$810.438.830</td><td>Factura 297527 (nueva)</td><td><a class="doclink" href="https://drive.google.com/file/d/1Enru2P_f6JxSt0hBkjokPsUORtvoio66/view?usp=drive_link" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">28914</td><td class="num tabular">$185.307.334</td><td>Factura 297527 (nueva)</td><td><a class="doclink" href="https://drive.google.com/file/d/1AwM0djtF75bWBtdiXRrLP2k6kVJZViNk/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr class="total"><td>Total</td><td class="num tabular">$1.006.661.864</td><td colspan="2"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Evidencia de resolución</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Evidencia</th><th>Detalle</th></tr></thead>
+          <tbody>
+            <tr><td>Cierre en SAP</td><td>Clase <b>SC</b> "NORMALIZA", doc. 830027015, -$1.006.661.864, contab. 13/08/2026, usuario JLREYES</td></tr>
+            <tr><td>Comprobante bancario Bci</td><td>+$1.006.661.864, 11/06/2026, glosa "DEVOLUCIONES" — <a class="doclink" href="https://drive.google.com/file/d/18PUw6ox2q5wscjkkn3o4DKE4OKQ2h7ZP/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td>Cuenta receptora</td><td>Cta. Cte. Bci N° 10514074, Copec S.A.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout resolved"><p><b>Grupo A: 100% documentado.</b> Comprobante bancario real confirma la devolución, con monto y fecha exactos.</p></div>
+    </section>
+
+    <!-- SECCIÓN 2 — GRUPO B -->
+    <section class="block" id="grupo-b">
+      <div class="eyebrow"><span class="idx">2</span><span class="pill pending">Sin resolver</span></div>
+      <h2>Grupo B — sin comprobante de devolución</h2>
+      <p>Seis Notas de Crédito, destinadas por su propio documento tributario a rebajar las mismas facturas 269459 y 269460. Nunca se aplicó ese descuento, y a la fecha no existe comprobante bancario que confirme una devolución equivalente a la del Grupo A.</p>
+
+      <div class="twrap">
+        <table>
+          <thead><tr><th>NC</th><th class="num">Monto</th><th>Factura destino (DTE)</th><th>Documento</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">26518</td><td class="num tabular">$647.535</td><td>269459</td><td><span class="nodoc">Falta PDF</span></td></tr>
+            <tr><td class="mono">26519</td><td class="num tabular">$2.579.949</td><td>269460</td><td><a class="doclink" href="https://drive.google.com/file/d/1Pc0JUwfPHUhomqcvpqUdPw4sOc73S_Ik/view?usp=drive_link" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26521</td><td class="num tabular">$2.095.473</td><td>269460 (por Pedido)</td><td><span class="nodoc">Falta PDF</span></td></tr>
+            <tr><td class="mono">26523</td><td class="num tabular">$798.835</td><td>269459</td><td><a class="doclink" href="https://drive.google.com/file/d/19feq7XMiku-VGcThrCCsnEB6YwcFqtZe/view?usp=sharing" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26525</td><td class="num tabular">$671.053</td><td>269459</td><td><a class="doclink" href="https://drive.google.com/file/d/1UfWA6wwpEO-db8kHy22q3DgqXek_BXkA/view?usp=drive_link" target="_blank" rel="noopener">Ver PDF <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg></a></td></tr>
+            <tr><td class="mono">26898</td><td class="num tabular">$3.900.000</td><td>Factura 22150 (siniestro)</td><td><span class="nodoc">Falta PDF</span></td></tr>
+            <tr class="total"><td>Total</td><td class="num tabular">$10.692.845</td><td colspan="2"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Cierre en SAP — comparado lado a lado con el Grupo A</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th></th><th>Grupo A (resuelto)</th><th>Resto factura 269461 ($3.363.504)</th><th>Grupo B (en disputa)</th></tr></thead>
+          <tbody>
+            <tr><td>Clase de documento</td><td class="mono">SC (830027015)</td><td class="mono">PV (260661024)</td><td class="mono">PV (262081612)</td></tr>
+            <tr><td>Estructura</td><td>Cierre único ligado a pago</td><td>Dos líneas que se autocompensan</td><td>Dos líneas que se autocompensan</td></tr>
+            <tr><td>¿Comprobante bancario real?</td><td>Sí — Bci, glosa "DEVOLUCIONES"</td><td>No — cruce de papeles 2024</td><td><b>No — no se ha encontrado ninguno</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Detalle del cierre del Grupo B — documento 262081612</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Clase</th><th>Referencia</th><th class="num">Importe</th><th>Fecha doc.</th><th>Fecha contab.</th><th>N° documento</th><th>Doc. compensación</th></tr></thead>
+          <tbody>
+            <tr><td>PV</td><td>NORMALIZA</td><td class="num tabular">+$10.692.845</td><td class="mono">15/07/2026</td><td class="mono">13/08/2026</td><td class="mono">262081612</td><td class="mono">(vacío)</td></tr>
+            <tr><td>PV</td><td>NORMALIZA</td><td class="num tabular">-$10.692.845</td><td class="mono">15/07/2026</td><td class="mono">15/07/2026</td><td class="mono">262081612</td><td class="mono">262081612 (self)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout pending">
+        <p><b>El argumento clave:</b> este es exactamente el mismo patrón (clase PV, autocompensación) que usó SAP para cerrar el remanente de $3.363.504 de la factura 269461 — un mecanismo ya comprobado que no involucra dinero nuevo, solo cruce documental. El Grupo A, en cambio, usó clase SC, ligada a un pago bancario real. El Grupo B se cerró con el mecanismo "de papel", no con el "de pago real".</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3 — EVIDENCIA -->
+    <section class="block" id="evidencia">
+      <div class="eyebrow"><span class="idx">3</span></div>
+      <h2>Por qué Continental aún debe el Grupo B</h2>
+      <p>Diez puntos de evidencia, de origen documental y contable, que sustentan que el saldo de $10.692.845 sigue pendiente de devolución.</p>
+
+      <ol class="evidence">
+        <li><b>Las NC son legalmente válidas</b> — su DTE referencia correctamente las facturas 269459 / 269460, con razón "Descuento comercial" (confirmado en los documentos de 26519, 26523 y 26525).</li>
+        <li><b>El propio SAP de Copec registra la intención de descuento</b> — texto interno "REBAJA FACTURA 269459 / 269460".</li>
+        <li><b>Ese descuento nunca se aplicó</b> — 269459 y 269460 se pagaron 100% vía el pago bancario ZP 330015623, sin descuento.</li>
+        <li><b>El Grupo B nunca fue marcado "dev."</b> en el campo Asignación de SAP, a diferencia del Grupo A.</li>
+        <li><b>Su cierre usó el mecanismo "de papel"</b> (clase PV, autocompensación) — el mismo que ya se comprobó sin dinero real en el tramo de $3.363.504 — y no el mecanismo "SC" con pago bancario real del Grupo A.</li>
+        <li><b>No existe comprobante bancario</b> equivalente al del Grupo A, pese a la búsqueda activa.</li>
+        <li><b>Copec reconoció internamente que seguía pendiente</b> — Juan Luis Hargous, 12/08/2026: <i>"deberían hacer la devolución de esas notas de crédito aparte… no las apliquen a estas facturas"</i>.</li>
+        <li><b>Valentina Lira expresó dudas activas</b> el mismo día: <i>"el seguro dice que se aplicaron a facturas que en su momento no pagamos y estamos validando…"</i></li>
+        <li><b>Las explicaciones de Continental se contradicen entre sí</b> — comparar los correos del 05/08/2026 y el 24/09/2026 sobre las NC 26519 y 26523.</li>
+        <li><b>Las NC se emitieron entre 2,5 y 4,5 meses después</b> de que las facturas ya estaban pagadas al 100% — la única vía válida de compensación era una devolución directa, aún no confirmada.</li>
+      </ol>
+    </section>
+
+    <!-- CONCLUSIÓN -->
+    <section class="block" id="conclusion">
+      <div class="eyebrow"><span class="idx">4</span></div>
+      <h2>Conclusión y solicitud a WTW / Continental</h2>
+      <p>El comprobante bancario Bci que Continental adjuntó en su correo del 24/09/2026 confirma un abono de $215.916.520 para la factura 269461 — sin mención de las NC 26523 ni 26519. Según los registros de SAP de Copec, el saldo restante de esa factura ($3.363.504) se cerró mediante un cruce contable de documentos de 2024, no con estas NC. Adicionalmente, los propios documentos tributarios (DTE) de las NC 26523 y 26519 referencian las facturas 269459 y 269460 respectivamente — no la 269461 — contradiciendo la explicación entregada.</p>
+
+      <div class="verdict">
+        <div class="vt">Solicitud formal</div>
+        <p>Solicitamos aclarar el destino real de estas Notas de Crédito, ya que la documentación que ustedes mismos han proporcionado no respalda la aplicación descrita, y el monto de $10.692.845 sigue, a nuestro juicio, pendiente de devolución.</p>
+      </div>
+    </section>
+
+    <div class="foot">
+      Documento de trabajo interno, elaborado en base a: SAP (reportes "Comprobantes SAP" y "Facturas SAP"), documentos tributarios electrónicos (DTE tipo 33 y 61), comprobantes bancarios Bci, y el hilo de correo "RE: DEVOLUCION DE PRIMAS/COPEC S.A./CONTINENTAL/TICKET # 23540". Los enlaces a PDF apuntan a Google Drive; verificar acceso según corresponda.
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Mobile nav toggle
+  const side = document.getElementById('side');
+  const menuBtn = document.getElementById('menuBtn');
+  const scrim = document.getElementById('scrim');
+  function closeNav(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+  if(menuBtn){
+    menuBtn.addEventListener('click', ()=>{
+      side.classList.toggle('open');
+      scrim.classList.toggle('show');
+    });
+  }
+  scrim.addEventListener('click', closeNav);
+  document.querySelectorAll('#toc a').forEach(a=>a.addEventListener('click', closeNav));
+
+  // Active section highlight
+  const links = Array.from(document.querySelectorAll('#toc a'));
+  const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = sections.indexOf(entry.target);
+      if(idx === -1) return;
+      if(entry.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        links[idx].classList.add('active');
+      }
+    });
+  }, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+  sections.forEach(s=> s && io.observe(s));
+</script>
+
+</body>
+</html>
